@@ -1,2 +1,2 @@
-rgr: rgr.cpp
-	g++ rgr.cpp -o rgr
+rgr: rgr.cpp main.cpp
+	g++ main.cpp rgr.cpp -o rgr
