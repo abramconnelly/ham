@@ -46,7 +46,18 @@ Solver
 TODO:
 
 * Posa's heuristic
-* Vandegriend & Culberson heuristics
+* Vandegriend & Culberson (+) heuristics
 * Experiments based on different input graphs
 
 
+Experiment
+---
+
+* VC+ algorithm on 10^{3,4,5,6} for ER random graphs (rg) (param in some reasonable range)
+* Posa algorithm on 10^{3,4,5,6} for ER rg (pram in some random range)
+  - # iterations (solved, unsolved, total)
+  - prob. solveable
+* VC+ on 10^{3,4,5,6} for Levy-stable distributions of \alpha \in { 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2 }
+  for critical parameter (& try to rescale if possible)
+  - median & average iterations on solved, unsolved, total
+  - prob. solveable

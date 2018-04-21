@@ -1,0 +1,41 @@
+graph middle_of_deg2_nei {
+  rankdir="LR";
+
+  u [ shape=circle ];
+  v [ shape=circle ];
+  w [ shape=circle ];
+
+  x [ label = "x", style = invis ];
+  y [ label = "y", style = invis ];
+
+  v0 [ label = "v0", style = invis ];
+  v1 [ label = "v1", style = invis ];
+  v2 [ label = "v2", style = invis ];
+  v3 [ label = "v3", style = invis ];
+  v4 [ label = "v4", style = invis ];
+  v5 [ label = "v5", style = invis ];
+  v6 [ label = "v6", style = invis ];
+
+  { rank=same; x ; u ; v ; w ; y}
+  { rank=same; v0;v1;v2 }
+  { rank=same; v3;v4;v5;v6 }
+
+  v0 -- v [style=dashed];
+  v1 -- v [style=dashed];
+  v2 -- v [style=dashed];
+
+
+  x -- u ;
+
+  u -- v ;
+
+  v -- v3 [style=dashed];
+  v -- v4 [style=dashed];
+  v -- v5 [style=dashed];
+  v -- v6 [style=dashed];
+
+
+
+  v -- w ;
+  w -- y ;
+}

@@ -1,0 +1,38 @@
+graph deg2_path {
+  rankdir="LR";
+
+  u [ shape=circle ];
+  t0 [ shape=circle ]
+  t1 [ shape=circle ]
+  t2 [ shape=circle ]
+  t3 [ shape=circle ]
+  v [ shape=circle ];
+
+  u0 [ label = "u0" , style = invis ];
+  u1 [ label = "u1" , style = invis ];
+  u2 [ label = "u2" , style = invis ];
+
+  v0 [ label = "v0" , style = invis ];
+  v1 [ label = "v1" , style = invis ];
+  v2 [ label = "v2" , style = invis ];
+  v3 [ label = "v3" , style = invis ];
+
+  u0 -- u ;
+  u1 -- u ;
+  u2 -- u ;
+
+  u -- v [ style=dashed ];
+
+  u -- t0 ;
+  t0 -- t1 ;
+  t1 -- t2 ;
+  t2 -- t3 ;
+  t3 -- v ;
+
+
+  v -- v0 ;
+  v -- v1 ;
+  v -- v2 ;
+  v -- v3 ;
+
+}
