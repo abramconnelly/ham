@@ -638,9 +638,7 @@ int vcham_cutset_heuristic(vcham_t &g) {
   }
   qsort( &(deg_v[0]), g.n_vertex, 2*sizeof(int32_t), cmp_int32_2);
 
-  // init
-  //
-  for (u=0; u<g.n_vertex; u++) { v_group.push_back(-1); }
+  v_group.resize(g.n_vertex, -1);
 
   for (i=0, k=1; i<deg_v.size(); i+=2, k++) {
 

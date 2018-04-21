@@ -78,6 +78,13 @@ int vcham_prune_between_degree_two(vcham_t &g);
 
 int vcham_unwind_history(vcham_t &g, size_t history_size);
 
+void vcham_ccfill(vcham_t &g, int32_t u, int32_t group, std::vector< int32_t > &v_group);
+int vcham_cutset_heuristic(vcham_t &g);
+
+int cmp_int32(const void *a, const void *b);
+int cmp_int32_2(const void *a, const void *b);
+
+
 //---
 // tests
 //---
@@ -93,9 +100,7 @@ int test_prune_between_degree_two(void);
 
 void vcham_debugprint(vcham_t &g);
 
-int cmp_int32(const void *a, const void *b);
-int cmp_int32_2(const void *a, const void *b);
-
+int test_ccfill(void);
 
 
 

@@ -1,5 +1,5 @@
 CC=g++
-FLAGS=-g
+FLAGS=-g -std=c++11
 LIBS=-lm
 
 ../bin/vcham: vcham.hpp vcham.cpp vcham-solve.cpp vcham-tests.cpp main.cpp

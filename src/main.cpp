@@ -67,13 +67,13 @@ int main(int argc, char **argv) {
   std::string ifn;
   vcham_t g, h;
 
-  int brute_force = 0, print_dimacs = 0, verbose_flag = 0;
+  int brute_force = 0, print_dimacs = 0, verbose_flag = 0, run_tests = 0, cutset_only=0;
 
   int64_t bound=-1, max_bound=-1;
 
   FILE *ofp = stdout;
 
-  while ((opt=getopt(argc, argv, "i:hvVBPb:"))!=-1) switch(opt) {
+  while ((opt=getopt(argc, argv, "i:hvVBPb:TC"))!=-1) switch(opt) {
 
     case 'i':
       ifn = optarg;
@@ -85,6 +85,9 @@ int main(int argc, char **argv) {
 
     case 'B':
       brute_force = 1;
+      break;
+    case 'C':
+      cutset_only = 1;
       break;
 
     case 'P':
@@ -101,11 +104,19 @@ int main(int argc, char **argv) {
       show_help(stdout);
       exit(0);
       break;
+    case 'T':
+      run_tests = 1;
+      break;
 
     default:
       show_help(stderr);
       exit(-1);
       break;
+  }
+
+  if (run_tests) {
+    test_ccfill();
+    exit(0);
   }
 
   if (optind < argc) {
@@ -129,6 +140,12 @@ int main(int argc, char **argv) {
   if (r!=0) {
     fprintf(stderr, "error, got %i\n", r);
     exit(-1);
+  }
+
+  if (cutset_only) {
+    r = vcham_cutset_heuristic(g);
+    printf("cutset heuristic: %i\n", r);
+    exit(0);
   }
 
   bound = max_bound;

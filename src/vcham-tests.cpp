@@ -309,3 +309,48 @@ int test_prune_between_degree_two() {
 int test_prune_path_degree_two_edge(vcham_t &g, int n_it) {
   return 0;
 }
+
+int test_ccfill_inst(int n_vertex, std::vector< int32_t > &edge) {
+  int i;
+  int32_t u;
+  std::vector< int32_t > v_group;
+  vcham_t g;
+
+  g.n_vertex = n_vertex;
+  g.n_edge = (int)(edge.size()/2);
+  for (i=0; i<edge.size(); i+=2) {
+    g.history.push_back(edge[i]);
+    g.history.push_back(edge[i+1]);
+    g.history.push_back(edge[i+1]);
+    g.history.push_back(edge[i]);
+  }
+  vcham_init_from_history(g);
+
+  vcham_fprint_dot_undirected(stdout, g);
+
+  for (u=0; u<g.n_vertex; u++) {
+    v_group.push_back(-1);
+  }
+
+  for (u=0; u<g.n_vertex; u++) {
+    vcham_ccfill(g, u, u, v_group);
+  }
+
+  for (i=0; i<v_group.size(); i++) {
+    printf(" %i", (int)v_group[i]);
+  }
+  printf("\n");
+
+  return 0;
+}
+
+int test_ccfill() {
+  int r, n_vertex = 5;
+  std::vector< int32_t > edge{ 0, 1,  2, 3, 3, 4 },
+    edge1{ 0, 1, 0, 2, 3, 4, 1, 4 };
+
+  r=test_ccfill_inst(n_vertex, edge);
+  r=test_ccfill_inst(n_vertex, edge1);
+
+  return r;
+}
