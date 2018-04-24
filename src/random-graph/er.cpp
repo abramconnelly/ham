@@ -25,6 +25,44 @@ void show_help(FILE *fp) {
   fprintf(fp, "\n");
 }
 
+int fill_mindeg(std::vector< std::vector< int > > &ve, int min_deg) {
+  int i, j, k, t;
+  int u, v, n_sample;
+  size_t n_v, n;
+  std::vector< int > vv;
+
+  n_v = ve.size();
+  vv.resize(n_v);
+
+  for (u=0; u<n_v; u++) {
+
+    if (ve[u].size() >= min_deg) { continue; }
+
+    for (i=0; i<n_v; i++) { vv[i]=i; }
+
+    // put neighbors at end of list
+    //
+    for (i=0; i<ve[u].size(); i++) {
+      v = ve[u][i];
+      t = vv[v];
+      vv[v] = vv[v_n-1-i];
+      vv[v_n-1-i] = t;
+    }
+
+    // don't inculde this vertex
+    //
+    t = vv[u];
+    vv[u] = vv[v_n-1-i];
+    vv[v_n-1-i] = t;
+
+    n = min_deg - ve[i].size();
+    for (j=0; j<n; j++) {
+    }
+
+  }
+
+}
+
 int main(int argc, char **argv) {
   int i, j, k, n_v, n_e=0, min_deg=0;
   int seed=0;
@@ -91,6 +129,10 @@ int main(int argc, char **argv) {
         n_e++;
       }
     }
+  }
+
+  if (min_deg > 0) {
+    fill_min_deg(ve, min_deg);
   }
 
   if (dot_format) {

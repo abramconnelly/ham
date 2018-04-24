@@ -10,6 +10,15 @@
 #include <vector>
 #include <string>
 
+typedef enum {
+  HAM_FOUND = 0,
+  HAM_SEARCH,
+  NOHAM_TRIVIAL,
+  NOHAM_CUTSET,
+  NOHAM_ROUNDROBIN,
+  NOHAM_TIMEOUT,
+} noham_flag_enum;
+
 // All verticies that appear here are 0-reference
 //
 typedef struct vcham_type {
@@ -44,9 +53,15 @@ typedef struct vcham_type {
   std::vector< int32_t > history;
   size_t history_stride;
 
-  vcham_type() : history_stride(6) { }
 
   std::string err_msg;
+
+  unsigned int solve_seed;
+  int64_t toll;
+  int flag;
+
+  vcham_type() : history_stride(6), flag(0), toll(0), solve_seed(0) { }
+
 } vcham_t;
 
 int vcham_init_from_history(vcham_t &g);
@@ -72,6 +87,8 @@ int vcham_ham_solve_simple(vcham_t &g);
 
 int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound);
 int vcham_solve(vcham_t &g);
+int vcham_solve_modified_culberson_vandegriend(vcham_t &g,  int64_t robin_bound, int64_t runtime_bound);
+
 
 int vcham_prune_path_vertex(vcham_t &g, int32_t u);
 int vcham_prune_between_degree_two(vcham_t &g);

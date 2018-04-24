@@ -695,6 +695,9 @@ int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, 
   int32_t u=0;
   int64_t bound=-1;
 
+  g.flag = 0;
+  g.toll = 0;
+
   if (robin_bound < 0) { robin_bound = (int64_t)g.n_vertex*2; }
   if (runtime_bound < 0) { runtime_bound = (int64_t)( 1LL << 62 ); }
 
@@ -702,13 +705,19 @@ int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, 
   // cycle
   //
   for (u=0; u<g.n_vertex; u++) {
-    if (g.n_nei[u]<2) { return 0; }
+    if (g.n_nei[u]<2) {
+      g.flag = NOHAM_TRIVIAL;
+      return 0;
+    }
   }
 
   // cut set heuristic
   //
   r = vcham_cutset_heuristic(g);
-  if (r==1) { return 0; }
+  if (r==1) {
+    g.flag = NOHAM_CUTSET;
+    return 0;
+  }
 
   // round robin initial attempt
   //
@@ -722,8 +731,12 @@ int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, 
 
     r = vcham_solve_r(g, u, robin_bound);
     if (r<0) { continue; }
+
+    g.flag = NOHAM_ROUNDROBIN;
     return r;
   }
+
+  if (g.solve_seed==0) { srand(g.solve_seed); }
 
   // backtracking search
   // exponential restart
@@ -738,8 +751,12 @@ int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, 
 
     r = vcham_solve_r(g, u, bound);
     if (r<0) { continue; }
+
+    g.flag = HAM_SEARCH;
+    g.toll = bound;
     return r;
   }
 
+  g.flag = NOHAM_TIMEOUT;
   return -1;
 }

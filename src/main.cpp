@@ -115,7 +115,8 @@ int main(int argc, char **argv) {
   }
 
   if (run_tests) {
-    test_ccfill();
+    r = test_ccfill();
+    if (r<0) { exit(-1); }
     exit(0);
   }
 
@@ -151,23 +152,22 @@ int main(int argc, char **argv) {
   bound = max_bound;
   g.path.push_back(0);
   g.visited[0] = 1;
-  r = vcham_solve_r(g, 0, bound);
+  //r = vcham_solve_r(g, 0, bound);
+  r = vcham_solve_modified_culberson_vandegriend(g, -1, -1);
 
-  if (max_bound < 0) {
-    bound = -bound;
-  }
-  else {
-    bound = max_bound - bound;
-  }
+  bound = g.toll;
+
+  //if (max_bound < 0) { bound = -bound; }
+  //else { bound = max_bound - bound; }
 
   if (r<0) {
     printf("TIMEOUT\n");
   }
   else if (r==1) {
-    printf("1 CYCLE %i\n", (int)(bound));
+    printf("1 HAMCYCLE %i (%i)\n", (int)(bound), g.flag);
   }
   else {
-    printf("0 NON %i\n", (int)(bound));
+    printf("0 NOCYCLE %i (%i)\n", (int)(bound), g.flag);
   }
 
   if (r==1) {
