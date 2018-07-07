@@ -293,7 +293,83 @@ int vcham_prune_between_degree_two(vcham_t &g) {
 // simple first try
 // WIP
 //
-int vcham_prune_path_degree_two_edge(vcham_t &g) {
+// if there's a chain of linked degree two vertices
+// with dangling (non degree 2) vertices that are connected
+// and not the full length of the graph, we can remove the edge
+// linking them as no cycle can pass through.
+//
+inline int vcham_prune_path_degree_two_edge(vcham_t &g) {
+  int i, j, k, dn, idx;
+  int32_t u, v, nei_deg2[2], v_l, v_r;
+  static std::vector< int > considered;
+  std::vector< int32_t > path_deg2;
+  int has_pruned=0, path_len=0;
+
+  if (considered.size() < g.n_vertex) {
+    considered.resize(g.n_vertex);
+  }
+  for (u=0; u<g.n_vertex; u++) { considered[u] = 0; }
+
+  //DEBUG
+#ifdef VERBOSE_SOLVE_PRINT
+  printf("### prune path deg2...\n");
+#endif
+
+  for (u=0; u<g.n_vertex; u++) {
+    if (g.n_nei[u]!=2) { continue; }
+    if (considered[u] != 0) { continue; }
+
+    considered[u] = 1;
+    idx = g.edge_idx[u];
+    v_l = g._edge[idx];
+    v_r = g._edge[idx+1];
+    path_len=1;
+
+    while ( (path_len < g.n_vertex) && (g.n_nei[v_l] == 2) ) {
+      path_len++;
+      considered[v_l] = 1;
+      idx = g.edge_idx[v_l];
+      v = g._edge[idx];
+      if (considered[v] == 0) { v_l = v; continue; }
+      v_l = g._edge[idx+1];
+    }
+
+    while ( (path_len < g.n_vertex) && (g.n_nei[v_r] == 2) ) {
+      path_len++;
+      considered[v_r] = 1;
+      idx = g.edge_idx[v_r];
+      v = g._edge[idx];
+      if (considered[v] == 0) { v_r=v; continue; }
+      v_r = g._edge[idx+1];
+    }
+
+    if ( (path_len < g.n_vertex) &&
+          vcham_has_edge(g, v_l, v_r) ) {
+      //has_pruned=1;
+      vcham_reme(g, v_l, v_r);
+
+#ifdef VERBOSE_SOLVE_PRINT
+      printf("### pruned path deg2 u%i-v%i, returning...\n", (int)v_l, (int)v_r);
+#endif
+
+      return 1;
+    }
+
+  }
+
+#ifdef VERBOSE_SOLVE_PRINT
+  printf("### prune path deg2, nothing to be done\n");
+#endif
+
+  //return has_pruned;
+  return 0;
+}
+
+
+// simple first try
+// WIP
+//
+int vcham_prune_path_degree_two_edge__slow(vcham_t &g) {
   int i, j, k, dn, idx;
   int32_t u, v, nei_deg2[2], v_l, v_r;
   static std::vector< int > considered;
@@ -395,10 +471,19 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
   printf("\n");
   printf("## visited:");
   for (i=0; i<g.visited.size(); i++) {
-    printf(" (v%i %i)", i, g.visited[i]);
+
+    if ((i%20)==0) { printf("\n## %4i:", i); }
+    if (g.visited[i]) {
+      printf(" %i", g.visited[i]);
+    } else {
+      printf(" .");
+    }
+
+
+    //printf(" (v%i %i)", i, g.visited[i]);
   }
   printf("\n");
-  vcham_fprint_dot_undirected(stdout, g);
+  //vcham_fprint_dot_undirected(stdout, g);
 #endif
 
   // Check end condition
@@ -416,6 +501,8 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
 #ifdef VERBOSE_SOLVE_PRINT
     printf("## ...nope\n");
 #endif
+
+    printf("...?\n");
 
     return 0;
   }
@@ -483,7 +570,7 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
 
     //DEBUG
 #ifdef VERBOSE_SOLVE_PRINT
-    printf("## >> v%i (from u%i-v%i)\n", (int)v, (int)u, (int)v);
+    printf("## adding v%i to path (from u%i-v%i)\n", (int)v, (int)u, (int)v);
 #endif
 
     // Save our history position
@@ -507,12 +594,18 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
 
       //DEBUG
 #ifdef VERBOSE_SOLVE_PRINT
-      printf("## ...got %i\n", r);
+      printf("## ...got %i, continuing...\n", r);
 #endif
 
       if (r<0) {
         err_ret = vcham_unwind_history(g, history_size);
-        if (err_ret < 0) { g.err_msg = "unwind error (a)"; return -1; }
+        if (err_ret < 0) {
+
+          //DEBUG
+          printf("unwind error (a)\n"); fflush(stdout);
+
+          g.err_msg = "unwind error (a)"; return -1;
+        }
         g.path.pop_back();
         g.visited[v] = 0;
         return 0;
@@ -525,9 +618,22 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
       still_pruning=0;
 
       r = vcham_prune_between_degree_two(g);
+
+      //DEBUG
+#ifdef VERBOSE_SOLVE_PRINT
+      printf("## vcham_prune_between_degree_two got: %i\n", r);
+#endif
+
+
       if (r<0) {
         err_ret = vcham_unwind_history(g, history_size);
-        if (err_ret < 0) { g.err_msg = "unwind error (b)"; return -1; }
+        if (err_ret < 0) {
+
+          //DEBUG
+          printf("unwinde error(b)\n"); fflush(stdout);
+
+          g.err_msg = "unwind error (b)"; return -1;
+        }
         g.path.pop_back();
         g.visited[v] = 0;
         return 0;
@@ -535,9 +641,22 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
       if (r!=0) { still_pruning = 1; }
 
       r = vcham_prune_path_degree_two_edge(g);
+
+      //DEBUG
+#ifdef VERBOSE_SOLVE_PRINT
+      printf("## vcham_prune_path_degree_two_edge got: %i\n", r);
+#endif
+
+
       if (r<0) {
         err_ret = vcham_unwind_history(g, history_size);
-        if (err_ret < 0) { g.err_msg = "unwind error (c)"; return -1; }
+        if (err_ret < 0) {
+
+          //DEBUG
+          printf("unwinde error(c)\n"); fflush(stdout);
+
+          g.err_msg = "unwind error (c)"; return -1;
+        }
         g.path.pop_back();
         g.visited[v] = 0;
         return 0;
@@ -548,10 +667,36 @@ int vcham_solve_r(vcham_t &g, int32_t u, int64_t &bound) {
 
     bound--;
     r = vcham_solve_r(g, v, bound);
-    if (r!=0) { return r; }
+
+      //DEBUG
+#ifdef VERBOSE_SOLVE_PRINT
+      printf("## recur vcham_solve_r got: %i\n", r);
+#endif
+
+
+    if (r!=0) {
+
+      //DEBUG
+      //printf("###r! %i\n", r);
+
+      return r;
+    }
 
     err_ret = vcham_unwind_history(g, history_size);
-    if (err_ret < 0) { g.err_msg = "unwind error (d)"; return -1; }
+
+      //DEBUG
+#ifdef VERBOSE_SOLVE_PRINT
+      printf("## unwinding (%i)\n", err_ret);
+#endif
+
+
+    if (err_ret < 0) {
+
+      //DEBUG
+      printf("unwind error (d)\n"); fflush(stdout);
+
+      g.err_msg = "unwind error (d)"; return -1;
+    }
     g.path.pop_back();
     g.visited[v] = 0;
 
@@ -690,16 +835,56 @@ int vcham_cutset_heuristic(vcham_t &g) {
   return 0;
 }
 
+int cmp_edges(vcham_t &g, vcham_t &h) {
+  int i, j;
+  int32_t u_idx, u, v;
+
+  for (u=0; u<g.n_nei.size(); u++) {
+    if (g.n_nei[u] != h.n_nei[u]) {
+      fprintf(stderr, "# n_nei mismatch! u%i %i != %i\n",
+          u, (int)g.n_nei[u], (int)h.n_nei[u]);
+      return 0;
+    }
+  }
+
+  for (u=0; u<g.edge_idx.size(); u++) {
+    u_idx = g.edge_idx[u];
+    for (j=0; j<g.n_nei[u]; j++) {
+      v = g._edge[u_idx+j];
+
+      if (!vcham_has_edge(h, u, v)) { return 0; }
+    }
+  }
+
+  for (u=0; u<h.edge_idx.size(); u++) {
+    u_idx = h.edge_idx[u];
+    for (j=0; j<h.n_nei[u]; j++) {
+      v = h._edge[u_idx+j];
+
+      if (!vcham_has_edge(g, u, v)) { return 0; }
+    }
+  }
+
+  return 1;
+}
+
 int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, int64_t runtime_bound) {
   int r;
   int32_t u=0;
-  int64_t bound=-1;
+  int64_t bound=-1, rt_bound=0;
+
+  vcham_t h;
 
   g.flag = 0;
   g.toll = 0;
 
+  vcham_copy(g,h);
+
   if (robin_bound < 0) { robin_bound = (int64_t)g.n_vertex*2; }
   if (runtime_bound < 0) { runtime_bound = (int64_t)( 1LL << 62 ); }
+
+  //DEBUG
+  //printf("## cp0 (%i %i) (%i)\n", vcham_check(g), vcham_check(h), cmp_edges(g,h) );
 
   // test for trivial properties of a graph which does not have a Hamiltonian
   // cycle
@@ -711,6 +896,12 @@ int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, 
     }
   }
 
+  //DEBUG
+//  printf("## cp1 (%i %i) (%i)\n",
+//      vcham_check(g), vcham_check(h),
+//      cmp_edges(g,h) );
+
+
   // cut set heuristic
   //
   r = vcham_cutset_heuristic(g);
@@ -719,43 +910,106 @@ int vcham_solve_modified_culberson_vandegriend(vcham_t &g, int64_t robin_bound, 
     return 0;
   }
 
+  //DEBUG
+//  printf("## cp2 (%i %i) (%i)\n",
+//      vcham_check(g), vcham_check(h),
+//      cmp_edges(g,h) );
+
+
   // round robin initial attempt
   //
   for (u=0; u<g.n_vertex; u++) {
     bound = robin_bound;
 
     g.path.clear();
-    memset( &(g.visited[0]), 0, sizeof(unsigned char));
+    memset( &(g.visited[0]), 0, sizeof(unsigned char) * (g.n_vertex) );
     g.path.push_back(u);
     g.visited[u] = 1;
 
+    //DEBUG
+    //printf("## cp2.0 (%i %i) (%i)\n", vcham_check(g), vcham_check(h), cmp_edges(g,h) );
+    //vcham_debug_print(g);
+
     r = vcham_solve_r(g, u, robin_bound);
-    if (r<0) { continue; }
+
+    //DEBUG
+    //printf("## cp2.1 (%i %i) (%i)\n", vcham_check(g), vcham_check(h), cmp_edges(g,h) ); 
+
+    if (r<0) {
+
+      vcham_unwind_history(g,0);
+
+      continue;
+    }
 
     g.flag = NOHAM_ROUNDROBIN;
     return r;
   }
 
+  //DEBUG
+  //printf("## cp3 (%i %i) (%i)\n", vcham_check(g), vcham_check(h), cmp_edges(g,h) );
+
+
   if (g.solve_seed==0) { srand(g.solve_seed); }
+
+  //DEBUG
+  //printf("## cp4 (%i %i) (%i)\n", vcham_check(g), vcham_check(h), cmp_edges(g,h) );
+
 
   // backtracking search
   // exponential restart
   //
   for (bound = (int64_t)(4*g.n_vertex); bound < runtime_bound; bound *= 2) {
     g.path.clear();
-    memset( &(g.visited[0]), 0, sizeof(unsigned char));
+    memset( &(g.visited[0]), 0, sizeof(unsigned char) * (g.n_vertex) );
 
     u = rand()%g.n_vertex;
+
+    //DEBUG!!
+    //u = 36;
+    //printf("WARNING, FORCING STARTING VERTEX TO %i\n", u);
+    //DEBUG!!
+
     g.path.push_back(u);
     g.visited[u]=1;
 
-    r = vcham_solve_r(g, u, bound);
-    if (r<0) { continue; }
+
+    if (g.verbose) {
+      printf("c starting, bound %lli (of %lli)\n", (long long int)bound, (long long int)runtime_bound);
+      fflush(stdout);
+    }
+
+
+    //DEBUG
+    //printf("## starting with u%i (%i %i) (%i) (bound %lli)\n",
+    //    u,
+    //    vcham_check(g), vcham_check(h),
+    //    cmp_edges(g,h),
+    //    (long long int) bound );
+
+
+    rt_bound = bound;
+    r = vcham_solve_r(g, u, rt_bound);
+
+    //DEBUG
+    //printf("# bound %lli (of %lli/%lli), r: %i\n",
+    //    (long long int)rt_bound,
+    //    (long long int)bound,
+    //    (long long int)runtime_bound,
+    //    (int)r);
+
+    if (r<0) {
+      vcham_unwind_history(g,0);
+      continue;
+    }
 
     g.flag = HAM_SEARCH;
-    g.toll = bound;
+    g.toll = bound - rt_bound;
     return r;
   }
+
+  //DEBUG
+  printf("## TIMEOUT\n");
 
   g.flag = NOHAM_TIMEOUT;
   return -1;

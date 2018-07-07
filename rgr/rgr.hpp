@@ -13,6 +13,7 @@
 #define RG_UNDIRECTED (1<<1)
 #define RG_LOOP_PAIR  (1<<2)
 
+int random_graph_edge(std::vector<long int> &edge_v, int n_nodes, int n_edges, unsigned int seed, unsigned int opt);
 int random_graph(std::vector<long int> &edge_v, int n_nodes, int n_edges, unsigned int seed, unsigned int opt);
 
 

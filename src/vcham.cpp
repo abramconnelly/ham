@@ -38,7 +38,7 @@ void vcham_fprint_dot_undirected_path(FILE *fp, vcham_t &g) {
   fprintf(fp, "}\n");
 }
 
-void vcham_debugprint(vcham_t &g) {
+void vcham_debug_print(vcham_t &g) {
   int i, j, k, u, v, w, x, n;
   int idx, u_idx, v_idx, u_offset, v_offset;
 
@@ -56,6 +56,17 @@ void vcham_debugprint(vcham_t &g) {
     printf("\n");
 
   }
+
+  printf("history(%i):", (int)g.history.size());
+  for (i=0; i<g.history.size(); i+=g.history_stride) {
+    if ((i%4)==0) { printf("\n%3i:", i); }
+    else { printf(","); }
+
+    for (j=0; j<g.history_stride; j++) {
+      printf(" %3i", g.history[i+j]);
+    }
+  }
+  printf("\n");
 }
 
 void vcham_copy(vcham_t &g, vcham_t &h) {
@@ -340,6 +351,32 @@ int vcham_check(vcham_t &g) {
   return 0;
 }
 
+void vcham_fprint_dimacs(FILE *fp, vcham_t &g, int comment_path_flag) {
+  int i, j, idx;
+
+  for (i=0; i<g.comment.size(); i++) {
+    fprintf(fp, "%s\n", g.comment[i].c_str());
+  }
+
+  if (comment_path_flag) {
+    fprintf(fp, "c path");
+    for (i=0; i<g.path.size(); i++) {
+      fprintf(fp, " %i", g.path[i]+1);
+    }
+    fprintf(fp, "\n");
+  }
+
+  fprintf(fp, "p edge %i %i\n", (int)g.n_vertex, (int)g.n_edge);
+  for (i=0; i<g.edge_idx.size(); i++) {
+    for (j=0; j<g.n_nei[i]; j++) {
+      idx = g.edge_idx[i];
+      if (g._edge[idx+j] < i) { continue; }
+      fprintf(fp, "e %i %i\n", i+1, g._edge[idx+j]+1);
+    }
+  }
+
+}
+
 void vcham_fprint_dimacs(FILE *fp, vcham_t &g) {
   int i, j, idx;
 
@@ -574,6 +611,7 @@ int vcham_read(vcham_t &g, FILE *fp) {
 
   while (!feof(fp)) {
     ch = fgetc(fp);
+
     if ((ch==EOF) || (ch=='\n')) {
 
       if (buf.size()==0) { continue; }

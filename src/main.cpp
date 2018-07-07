@@ -67,13 +67,15 @@ int main(int argc, char **argv) {
   std::string ifn;
   vcham_t g, h;
 
-  int brute_force = 0, print_dimacs = 0, verbose_flag = 0, run_tests = 0, cutset_only=0;
+  int brute_force = 0, print_dimacs = 0, verbose_flag = 0,
+      run_tests = 0, cutset_only=0, print_dot = 0,
+      print_path = 0;
 
   int64_t bound=-1, max_bound=-1;
 
   FILE *ofp = stdout;
 
-  while ((opt=getopt(argc, argv, "i:hvVBPb:TC"))!=-1) switch(opt) {
+  while ((opt=getopt(argc, argv, "i:hvVBPb:TCS"))!=-1) switch(opt) {
 
     case 'i':
       ifn = optarg;
@@ -106,6 +108,10 @@ int main(int argc, char **argv) {
       break;
     case 'T':
       run_tests = 1;
+      break;
+
+    case 'S':
+      print_path = 1;
       break;
 
     default:
@@ -143,17 +149,29 @@ int main(int argc, char **argv) {
     exit(-1);
   }
 
+  if (verbose_flag) { g.verbose = 1; }
+
+  //DEBUG
+  //vcham_debug_print(g);
+
   if (cutset_only) {
     r = vcham_cutset_heuristic(g);
     printf("cutset heuristic: %i\n", r);
     exit(0);
   }
 
-  bound = max_bound;
-  g.path.push_back(0);
-  g.visited[0] = 1;
-  //r = vcham_solve_r(g, 0, bound);
-  r = vcham_solve_modified_culberson_vandegriend(g, -1, -1);
+  if (brute_force) {
+    r = vcham_ham_solve_simple(g);
+  }
+  else {
+    bound = max_bound;
+    g.path.push_back(0);
+    g.visited[0] = 1;
+
+    //r = vcham_solve_r(g, 0, bound);
+    //r = vcham_solve_modified_culberson_vandegriend(g, -1, -1);
+    r = vcham_solve_modified_culberson_vandegriend(g, -1, max_bound);
+  }
 
   bound = g.toll;
 
@@ -164,18 +182,20 @@ int main(int argc, char **argv) {
     printf("TIMEOUT\n");
   }
   else if (r==1) {
-    printf("1 HAMCYCLE %i (%i)\n", (int)(bound), g.flag);
+    printf("c 1 HAMCYCLE %i (%i)\n", (int)(bound), g.flag);
+    //printf("1 HAMCYCLE %i (%i)\n", (int)(bound), g.flag);
   }
   else {
-    printf("0 NOCYCLE %i (%i)\n", (int)(bound), g.flag);
+    printf("c 0 NOCYCLE %i (%i)\n", (int)(bound), g.flag);
+    //printf("0 NOCYCLE %i (%i)\n", (int)(bound), g.flag);
   }
 
   if (r==1) {
     if (vcham_cycle_check(g))  {
-      if (verbose_flag) { printf("# check: ok\n"); }
+      if (verbose_flag) { printf("c check: ok\n"); }
     }
     else {
-      printf("# ERROR, path check failed!\n");
+      printf("c ERROR, path check failed!\n");
     }
 
   }
@@ -190,6 +210,14 @@ int main(int argc, char **argv) {
   }
 
   if (print_dimacs) {
+    if ((r) && (print_path)) {
+      vcham_fprint_dimacs(stdout, g, 1);
+    } else {
+      vcham_fprint_dimacs(stdout, g, 0);
+    }
+  }
+
+  if (print_dot) {
     if (r) {
       vcham_fprint_dot_undirected_path(stdout, g);
     }

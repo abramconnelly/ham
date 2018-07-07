@@ -2,49 +2,14 @@
 //
 #include "rgr.hpp"
 
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <getopt.h>
-
-#include <vector>
-#include <map>
-#include <string>
-*/
-
-/*
-static long int _r(long int range, long int *exclude) {
-  int i, j, k, it, max_it = 100, n;
-  long int r;
-
-  if (!exclude) { return range * (rand() / (RAND_MAX + 1.0)); }
-
-  for (n=0,i=0; exclude[i]>=0; i++) { n++; }
-
-  for (it=0; it<max_it; it++) {
-
-    r = range * (rand() / (RAND_MAX + 1.0));
-    for (i=0; i<n; i++) {
-      if (r == exclude[i]) break;
-    }
-
-    if (i<n) { continue; }
-
-    return r;
-  }
-
-  return -1;
-}
-*/
-
 void show_help() {
   printf("rgr - Random GRaph generation in DIMACS format\n");
   printf("usage:\n");
   printf("\n");
-  printf("    rgr [-h] [-v] [-e edge] [-v vertices] [-p prob] [-S seed] [-C comment]\n");
+  printf("    rgr [-h] [-v] [-e edge] [-n vertices] [-p prob] [-S seed] [-C comment]\n");
   printf("\n");
   printf("  [-p prob]       edge probability)\n");
-  printf("  [-v vertices]   number of verticies)\n");
+  printf("  [-n vertices]   number of verticies)\n");
   printf("  [-e edge]       number of edges\n");
   printf("  [-S seed]       seed for rng\n");
   printf("  [-C comment]    comment\n");
@@ -130,9 +95,9 @@ int main(int argc, char **argv) {
 
   out_format = "dimacs";
 
-  while ((ch=getopt(argc, argv, "he:v:p:S:C:F:ULM"))!=-1) switch(ch) {
+  while ((ch=getopt(argc, argv, "vhe:n:p:S:C:F:ULM"))!=-1) switch(ch) {
     case 'p': prob = atof(optarg); break;
-    case 'v': n_nodes = atoi(optarg); break;
+    case 'n': n_nodes = atoi(optarg); break;
     case 'e': n_edges = atoi(optarg); break;
     case 'S': seed = (unsigned int)atoi(optarg); break;
     case 'C': comment = optarg; break;
@@ -161,7 +126,8 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  random_graph(edge_v, n_nodes, n_edges, seed, opt);
+  //random_graph(edge_v, n_nodes, n_edges, seed, opt);
+  random_graph_edge(edge_v, n_nodes, n_edges, seed, opt);
 
   /*
   srand(seed);

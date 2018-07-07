@@ -54,13 +54,27 @@ typedef struct vcham_type {
   size_t history_stride;
 
 
+  // we do a lot of pruning of degree 2 vertices,
+  // so keep some special structures to help
+  // facilitate the heuristics
+  //
+  //std::vector< int32_t > deg2;
+  //std::vector< int32_t > nonpath_deg2;
+
   std::string err_msg;
 
   unsigned int solve_seed;
   int64_t toll;
   int flag;
 
-  vcham_type() : history_stride(6), flag(0), toll(0), solve_seed(0) { }
+  uint32_t verbose;
+  int64_t runtime_bound, robin_bound;
+
+  vcham_type() : history_stride(6), flag(0), toll(0), solve_seed(0), verbose(0),
+                 n_vertex(0), n_edge(0) {
+    runtime_bound = (int64_t)( 1LL << 62 );
+    robin_bound = 0;
+  }
 
 } vcham_t;
 
@@ -68,7 +82,7 @@ int vcham_init_from_history(vcham_t &g);
 int vcham_check(vcham_t &g);
 int vcham_read(vcham_t &g, FILE *fp);
 void vcham_fprint(FILE *fp, vcham_t &g);
-void vcham_fprint_dimacs(FILE *fp, vcham_t &g);
+void vcham_fprint_dimacs(FILE *fp, vcham_t &g, int comment_path_flag);
 void vcham_fprint_dot_undirected(FILE *fp, vcham_t &g);
 void vcham_fprint_dot_undirected_path(FILE *fp, vcham_t &g);
 
@@ -115,7 +129,7 @@ int test_prune_path_vertex(void);
 int test_prune_between_degree_two(void);
 
 
-void vcham_debugprint(vcham_t &g);
+void vcham_debug_print(vcham_t &g);
 
 int test_ccfill(void);
 
