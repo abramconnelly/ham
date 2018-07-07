@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+import sys
+
+line_no=0
+undirectedGraph = True
+
+max_v = -1
+path = []
+edge = {}
+
+for line in sys.stdin:
+  line = line.strip()
+  line_no+=1
+
+  if len(line)==0: continue
+  if line[0] == 'c':
+    tok = line.split(" ")
+    if (len(tok)>2) and (tok[1] == 'path'):
+      for idx in range(2, len(tok)):
+        path.append(tok[idx])
+    continue
+  if line[0] != 'e': continue
+
+  tok = line.split(' ')
+  if len(tok)!=3:
+    print "ERROR:", line_no,": invalid edge decleration: '", line, "'"
+    sys.exit(-3)
+
+  edge[ tok[1] + ":" + tok[2] ] = True
+  if undirectedGraph:
+    edge[ tok[2] + ":" + tok[1] ] = True
+
+  u = int(tok[1]) - 1
+  v = int(tok[2]) - 1
+
+  max_v = max(u,v,max_v)
+
+if len(path) != (max_v+1):
+  print "ERROR: path length mismatch (max_v", max_v, ", path:", path, ")"
+  sys.exit(-2)
+
+if len(path)==0:
+  print "path 0 length..."
+  sys.exit(0)
+
+for idx in range(len(path)):
+  key = path[idx] + ":" + path[(idx+1)%len(path)]
+  if not (key in edge):
+    print "INVALID PATH, edge", key, "not found"
+    sys.exit(-1)
+
+print "ok"
+sys.exit(0)

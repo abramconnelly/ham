@@ -1,0 +1,37 @@
+#!/bin/bash
+
+ifn="$1"
+
+if [[ "$ifn" == "" ]] ; then
+  echo "usage:"
+  echo ""
+  echo "  hcp2dimacs <ifn>"
+  echo ""
+  exit 1
+fi
+
+ecount=`grep -P -v '^(NAME|COMMENT|TYPE|DIMEN|EDGE)' $ifn | \
+  sed 's/^ *//' | \
+  sed 's/  */ /g' | \
+  egrep -v '^EOF' | \
+  egrep -v -- '-1' | wc -l | cut -f1 -d ' '`
+
+maxedge=`grep -P -v '^(NAME|COMMENT|TYPE|DIMEN|EDGE)' $ifn | \
+  sed 's/^ *//' | \
+  sed 's/  */ /g' | \
+  egrep -v '^EOF' | \
+  egrep -v -- '-1' | tr ' ' '\n' | sort -u -n | dos2unix | tail -n1`
+
+echo "c ok"
+echo "p edge $maxedge $ecount"
+
+grep -P -v '^(NAME|COMMENT|TYPE|DIMEN|EDGE)' $ifn | \
+  sed 's/^ *//' | \
+  sed 's/  */ /g' | \
+  egrep -v '^EOF' | \
+  egrep -v -- '-1' | \
+  sed 's/^/e /' | \
+  dos2unix 
+
+
+
